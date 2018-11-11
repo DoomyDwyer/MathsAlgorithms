@@ -1,4 +1,4 @@
-﻿// Erastothenes.cpp : The Sieve of Erastothenes .
+// Erastothenes.cpp : The Sieve of Erastothenes .
 //
 
 #pragma once
@@ -20,33 +20,34 @@ int main()
 	cout << "Sieve of Erastothenes" << endl;
 	cout << "Calculate primes between 2 and ";
 
-	vector<bool>::size_type number;
+	long long number;
 	cin >> number;
 
-	// Initialise N+1 bools in a vector:
+	// Initialise N+1 bools in a dynamic array:
 	// We'll ignore elements 0 & 1, allowing us to index the vector using the actual numbers
 	// we're working with (2..N)
 	// bools are set to true initially as they're all potential primes until 'crossed out' (i.e. set to false)
-	const vector<bool>::size_type LIST_LENGTH = number + 1;
+	const long long LIST_LENGTH = number + 1;
 
 	cout << "Allocating memory... ";
 	const clock_t alloc_begin_time = clock(); 
-	vector<bool> numbers(LIST_LENGTH, true);
+	bool *numbers = new bool [LIST_LENGTH];
+	memset(numbers, true, LIST_LENGTH * sizeof(bool));
 	cout << float(clock() - alloc_begin_time) << " msecs" << endl;
 
-	const decltype(numbers.size()) FIRST_PRIME = 2;
-	const decltype(numbers.size()) SQRT_OF_N = sqrt(number);
-	//decltype(numbers.size()) count = 0;
+	const long long FIRST_PRIME = 2;
+	const long long SQRT_OF_N = sqrt(number);
+	//long long count = 0;
 
 	// Get performance stats
 	cout << "Running algorithm..." << endl;
 	const clock_t begin_time = clock();
 
-	decltype(numbers.size()) prime = FIRST_PRIME;
+	long long prime = FIRST_PRIME;
 	while (prime <= SQRT_OF_N) {
 		if (numbers[prime]) {
 			// Cross out all multiples of the prime numberas
-			for (decltype(numbers.size()) multiple = prime * 2; multiple < LIST_LENGTH; multiple += prime) {
+			for (long long multiple = prime * 2; multiple < LIST_LENGTH; multiple += prime) {
 				if (numbers[multiple]) {
 					numbers[multiple] = false;
 				}
@@ -70,5 +71,6 @@ int main()
 	//cout << endl << "There are " << count << " prime numbers between " << FIRST_PRIME << " and " << number << " ." << endl;
 	std::cout << "Time taken: " << float(clock() - begin_time) << " msecs";
 
+	delete[] numbers;
 	return 0;
 }
