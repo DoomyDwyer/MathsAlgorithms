@@ -3,52 +3,214 @@
 # Unit 10 Quadratics, Book C, MU123 Discovering Mathematics, The Open University
 # Author of python code: Steve Dwyer
 
-from time import sleep
+import matplotlib.pyplot as pyplot
+from turtle import Turtle
+import abc
 
-def plotPoint(x, y):
-	# Plot the point (x, y) on the graph
-	print ('(%f, %f)' % (x, y))
-	# or: rounded to the nearest integer to get discrete coordinates to use in a graphics system
-	#print ('(%i, %i)' % (round(x), round(y)))
+# Define a class of planets with their respective values of the constant g, 
+# i.e. acceleration due to gravity (in metres per second squared)
+# g on earth is approx 9.81, on mars 3.728 and on the surface of the moon 1.62
+class Planet(metaclass=abc.ABCMeta):
+	@abc.abstractmethod
+	def g(self):
+		pass
 
-	# Display the projectile's trajectory in real time
-	sleep(0.0005)
+class Earth(Planet):
+	def g(self):
+		return 9.81
 
-def calculateTrajectory(h, v):
-	y = h # Initialise point on y-axis to be identical to our initial height above sea level
-	g = 9.81 # The constant g, i.e. acceleration due to gravity (in metres per second squared)
-	t = 0.0 # Time travelled by the projectile so far (in seconds)
+class Mars(Planet):
+	def g(self):
+		return 3.728
 
-	# No account is taken of drag (air resistance) in this model
-	# The projectile is fired horizontally
+class Luna(Planet):
+	def g(self):
+		return 1.62
 
-	while y > 0.0: # Loop as long as projectile is above sea level
-		# Use the linear constant speed equation distance=speed*time to give the point on the x-axis
-		# (i.e. the distance travelled horizontally in metres after t seconds)
-		x = v * t
+# Define a class of projectiles to paint on the screen
+# with a shape and colour and a method for 'stepping' (moving to the next coordinate)
+class Projectile(metaclass=abc.ABCMeta):
+	@abc.abstractmethod
+	def step(self):
+		pass
 
-		# Use the quadratic free-fall equation to give the point on the y-axis
-		# (i.e. the height of the projectile above sea level after having travelled for t seconds)
-		#
-		# The current height above sea level is the difference between the initial height h and
-		# the distance fallen so far
-		y = h - (0.5 * g * t**2)
+# The only projectile we have for Turtle is a black cannonball for now
+class TurtleBall(Projectile):
+	def __init__(self, turtle, screen):
+		# Initialise the Turtle system
+		self.turtle = turtle
+		self.screen = screen
+		self.turtle.pen(fillcolor="black", pencolor="black", pensize=1)
+		# Initialise variables to store the latest x and y coordinates, relative to the screen size
+		self.height = screen.window_height()
+		self.width = screen.window_width()
+		self.x_value = None
+		self.y_value = None
 
-		# Plot the points using the rendering method of choice
-		plotPoint(x, y)
+	# Move to the next coordinate
+	def step(self, x, y):
+		if x != self.x_value or self.x_value == None or y != self.y_value or self.y_value == None:
+			self.turtle.penup()
+			self.turtle.goto(x - self.width / 2, y)
+			self.turtle.pendown()
+			self.turtle.dot()
+	
+			self.x_value = x
+			self.y_value = y
 
-		# Increment time travelled so far by 1 ms (millisecond)
-		t = t + 0.001
-	# End while
+# A class of guns with their respective muzzle velocities and heights above sea level
+class Gun(metaclass=abc.ABCMeta):
+	@abc.abstractmethod
+	def height(self):
+		pass
 
-	# Splash! Your projectile has hit sea level (assuming nothing else got in the way ;-)
-	return t
+	@abc.abstractmethod
+	def muzzleVelocity(self):
+		pass
 
-# Initialise our variables and call the Calculate Trajectory function
-# Use floats, not integers, for all calculations
-h = 10.0 # Initial height above sea level (in metres)
-v = 300.0 # Muzzle velocity of gun (in m/s)
-t = calculateTrajectory(h, v)
+# A shipborne cannon 10 above sea level
+class Cannon(Gun):
+	def __init__(self):
+		# Use floats, not integers, for all calculations
+		self.h = 10.0 # Initial height above sea level (in metres)
+		self.v = 300.0 # Muzzle velocity of gun (in m/s)
+
+	def height(self):
+		return self.h
+
+	def muzzleVelocity(self):
+		return self.v
+
+# A standing soldier 2m above ground level holding a Lee Enfield rifle with Mark VII .303 ammunition
+class LeeEnfield303MarkVII(Gun):
+	def __init__(self):
+		# Use floats, not integers, for all calculations
+		self.h = 2.0 # Initial height above sea level (in metres)
+		self.v = 744.0 # Muzzle velocity of gun (in m/s)
+
+	def height(self):
+		return self.h
+
+	def muzzleVelocity(self):
+		return self.v
+
+class AbstractPlotter(metaclass=abc.ABCMeta):
+	@abc.abstractmethod
+	def plot(self, x, y):
+		pass
+
+	@abc.abstractmethod
+	def finalise(self):
+		pass
+
+class TextPlotter(AbstractPlotter):
+	# Will display graphs as a collection of coordinates output on the python console
+	def plot(self, x, y):
+		# Plot the point (x, y) on the graph
+		print ('(%f, %f)' % (x, y))
+
+	def finalise(self):
+		pass
+		
+class TurtlePlotter(AbstractPlotter):
+	# Will display graphs as a collection of coordinates output on the python console
+	def __init__(self, projectile):
+		# Create a list of values for the x and y coordinates to be used to plot the graph
+		self.turtle = Turtle()
+		self.screen = self.turtle.getscreen()
+		self.screen.tracer(0, 1)
+
+		# Display the projectile's trajectory in (approximated) real time
+		self.projectile = projectile(self.turtle, self.screen)
+
+	def plot(self, x, y):
+		# Plot the point (x, y) on the graph
+		self.projectile.step(round(x), round(y))
+
+	def finalise(self):
+		# The passed y value is less than or equal to zero, 
+		# indicating that the cannonball has reached sea level and therefore
+		# the algorithm is complete: so plot the graph
+		self.turtle.penup()
+		self.turtle.goto(self.screen.window_width() / -2, self.screen.window_height() / 2)
+		# Allow Turtle to update the screen
+		self.screen.update()
+		# Clicking on the Turtle graphics window will close it
+		self.screen.exitonclick()  
+		# Call Tkinter's mainloop function
+		self.screen.mainloop()
+
+class PyplotPlotter(AbstractPlotter):
+	# Will use the matplotlib.pyplot function to plot a graph with x & y-axes
+	def __init__(self):
+		# Create a list of values for the x and y coordinates to be used to plot the graph
+		self.x_values = []
+		self.y_values = []
+
+	def plot(self, x, y):
+		# Add the passed x and y values to the internal list variables to use later
+		self.x_values.append(x)
+		self.y_values.append(y)
+		
+	def finalise(self):
+		# The passed y value is less than or equal to zero, 
+		# indicating that the cannonball has reached sea level and therefore
+		# the algorithm is complete: so plot the graph
+		pyplot.plot(self.x_values, self.y_values)
+		pyplot.show
+
+class TrajectoryPlotter():
+	def __init__(self, plotter):
+		# Use the passed plotting strategy object to plot the parabola of the projectile's trajectory
+		self.plotter = plotter
+
+	def calculateTrajectory(self, planet, gun):
+		g = planet.g()
+		h = gun.height()
+		v = gun.muzzleVelocity()
+		y = h # Initialise point on y-axis to be identical to our initial height above sea level
+		t = 0.0 # Time travelled by the projectile so far (in seconds)
+	
+		# No account is taken of drag (air resistance) in this model
+		# The projectile is fired horizontally
+	
+		while y > 0.0: # Loop as long as projectile is above sea level
+			# Use the linear constant speed equation distance=speed*time to give the point on the x-axis
+			# (i.e. the distance travelled horizontally in metres after t seconds)
+			x = v * t
+	
+			# Use the quadratic free-fall equation to give the point on the y-axis
+			# (i.e. the height of the projectile above sea level after having travelled for t seconds)
+			#
+			# The current height above sea level is the difference between the initial height h and
+			# the distance fallen so far
+			y = h - (0.5 * g * t**2)
+	
+			# Plot the points using the rendering method of choice:
+			# invoke the plot() method on the plotting strategy object
+			self.plotter.plot(x, y)
+	
+			# Increment time travelled so far by 1 ms (millisecond)
+			t = t + 0.001
+		# End while
+	
+		# Splash! Your projectile has hit sea level (assuming nothing else got in the way ;-)
+		return t
+
+# Instantiate the Plotter class we want to use -
+# We'll pass this to the TrajectoryPlotter's constructor so we can change the plotting behaviour 
+# at compile time, without having to alter the code of the method containing the actual maths
+plotter = TurtlePlotter(TurtleBall)
+# Instantiate the trajectoryPlotter object, with the chosen plotting strategy object passed to the constructor
+trajectoryPlotter = TrajectoryPlotter(plotter)
+# We'll use g for our calculation for the planet of our choice
+planet = Earth()
+# Use the shipborne cannon as our weapon of choice
+gun = Cannon()
+# Call the method to calculate the trajectory
+t = trajectoryPlotter.calculateTrajectory(planet, gun)
 # Just out of interest: the time take to reach sea level -
-# This was returned by the calculateTrajectory() function
+# This was returned by the calculateTrajectory() method
 print ('t = %fs' % t)
+# Do any tidying up needed by the plotter
+plotter.finalise()
