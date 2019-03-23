@@ -1,11 +1,14 @@
 # Calculate the trajectory of a projectile fired horizontally from a gun
 # Source of mathematics and inspiration taken from Example 1: Predicting the range of a cannonball, 
 # Unit 10 Quadratics, Book C, MU123 Discovering Mathematics, The Open University
+# Inspiration for the addition of angle θ to formulae for x and x-coordinates from
+# https://www.101computing.net/projectile-motion-formula/
 # Author of python code: Steve Dwyer
 
+import abc
+from math import cos, sin, radians
 import matplotlib.pyplot as pyplot
 from turtle import Turtle
-import abc
 
 # Define a class of planets with their respective values of the constant g, 
 # i.e. acceleration due to gravity (in metres per second squared)
@@ -58,38 +61,26 @@ class TurtleBall(Projectile):
 			self.x_value = x
 			self.y_value = y
 
-# A class of guns with their respective muzzle velocities and heights above sea level
+# A class of guns with their respective muzzle velocities
 class Gun(metaclass=abc.ABCMeta):
-	@abc.abstractmethod
-	def height(self):
-		pass
-
 	@abc.abstractmethod
 	def muzzleVelocity(self):
 		pass
 
-# A shipborne cannon 10 above sea level
+# A shipborne cannon
 class Cannon(Gun):
 	def __init__(self):
 		# Use floats, not integers, for all calculations
-		self.h = 10.0 # Initial height above sea level (in metres)
 		self.v = 300.0 # Muzzle velocity of gun (in m/s)
-
-	def height(self):
-		return self.h
 
 	def muzzleVelocity(self):
 		return self.v
 
-# A standing soldier 2m above ground level holding a Lee Enfield rifle with Mark VII .303 ammunition
+# A Lee Enfield rifle with Mark VII .303 ammunition
 class LeeEnfield303MarkVII(Gun):
 	def __init__(self):
 		# Use floats, not integers, for all calculations
-		self.h = 2.0 # Initial height above sea level (in metres)
 		self.v = 744.0 # Muzzle velocity of gun (in m/s)
-
-	def height(self):
-		return self.h
 
 	def muzzleVelocity(self):
 		return self.v
@@ -164,11 +155,11 @@ class TrajectoryPlotter():
 		# Use the passed plotting strategy object to plot the parabola of the projectile's trajectory
 		self.plotter = plotter
 
-	def calculateTrajectory(self, planet, gun):
+	def calculateTrajectory(self, planet, gun, h, degrees):
 		g = planet.g()
-		h = gun.height()
 		v = gun.muzzleVelocity()
 		y = h # Initialise point on y-axis to be identical to our initial height above sea level
+		θ = radians(degrees)
 		t = 0.0 # Time travelled by the projectile so far (in seconds)
 	
 		# No account is taken of drag (air resistance) in this model
@@ -177,14 +168,14 @@ class TrajectoryPlotter():
 		while y > 0.0: # Loop as long as projectile is above sea level
 			# Use the linear constant speed equation distance=speed*time to give the point on the x-axis
 			# (i.e. the distance travelled horizontally in metres after t seconds)
-			x = v * t
+			x = v * t * cos(θ)
 	
 			# Use the quadratic free-fall equation to give the point on the y-axis
 			# (i.e. the height of the projectile above sea level after having travelled for t seconds)
 			#
 			# The current height above sea level is the difference between the initial height h and
 			# the distance fallen so far
-			y = h - (0.5 * g * t**2)
+			y = h + v * t * sin(θ) - 0.5 * g * t**2
 	
 			# Plot the points using the rendering method of choice:
 			# invoke the plot() method on the plotting strategy object
@@ -200,17 +191,23 @@ class TrajectoryPlotter():
 # Instantiate the Plotter class we want to use -
 # We'll pass this to the TrajectoryPlotter's constructor so we can change the plotting behaviour 
 # at compile time, without having to alter the code of the method containing the actual maths
-plotter = TurtlePlotter(TurtleBall)
+plotter = PyplotPlotter() #TurtlePlotter(TurtleBall) 
 # Instantiate the trajectoryPlotter object, with the chosen plotting strategy object passed to the constructor
 trajectoryPlotter = TrajectoryPlotter(plotter)
 # We'll use g for our calculation for the planet of our choice
 planet = Earth()
 # Use the shipborne cannon as our weapon of choice
 gun = Cannon()
-# Call the method to calculate the trajectory
-t = trajectoryPlotter.calculateTrajectory(planet, gun)
-# Just out of interest: the time take to reach sea level -
-# This was returned by the calculateTrajectory() method
-print ('t = %fs' % t)
+# Determine height above sea level for the gun and the angle at which the projectile is fired
+# Use floats, not integers, for all calculations
+height = 10.0
+
+for angle in [0.0, 15.0, 30.0, 45.0, 60.0, 75.0]:
+	# Call the method to calculate the trajectory
+	time = trajectoryPlotter.calculateTrajectory(planet, gun, height, angle)
+	# Just out of interest: the time take to reach sea level -
+	# This was returned by the calculateTrajectory() method
+	print ('v = %im/s, h = %im, θ = %i°, t = %fs' % (gun.muzzleVelocity(), height, angle, time))
+
 # Do any tidying up needed by the plotter
 plotter.finalise()
