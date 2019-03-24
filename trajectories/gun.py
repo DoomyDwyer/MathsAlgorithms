@@ -3,6 +3,7 @@
 # Unit 10 Quadratics, Book C, MU123 Discovering Mathematics, The Open University
 # Inspiration for the addition of angle θ to formulae for x and x-coordinates from
 # https://www.101computing.net/projectile-motion-formula/
+# Ballistic properties of .303 round from https://en.wikipedia.org/wiki/.303_British
 # Author of python code: Steve Dwyer
 
 import abc
