@@ -126,7 +126,7 @@ class TurtlePlotter(AbstractPlotter):
 		self.screen = turtle.getscreen()
 		# Get rid of the ugly arrow at the centre of the screen
 		turtle.hideturtle()
-		# Maximise the screen, with a bit of space arouond so you move or resize it
+		# Maximise the screen, with a bit of space around so you move or resize it
 		self.screen.setup(width = 0.9, height = 0.9, startx = 10, starty = 10)
 		# Get the current graphics window width & height
 		self.window_width = self.screen.window_width()
@@ -202,12 +202,12 @@ class TrajectoryPlotter():
 		cos_θ = cos(θ)
 		sin_θ = sin(θ)
 
-		# No account is taken of drag (air resistance) in this model
 		self.plotter.init()
 
 		while y > 0.0: # Loop as long as projectile is above sea level
-			# Use the linear constant speed equation distance=speed*time to give the point on the x-axis
+			# Use the linear constant speed equation displacement = velocity * time to give the point on the x-axis
 			# (i.e. the distance travelled horizontally in metres after t seconds)
+			# No account is taken of drag (air resistance) in this model
 			x = v * t * cos_θ
 
 			# Use the quadratic free-fall equation to give the point on the y-axis
