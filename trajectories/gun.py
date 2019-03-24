@@ -102,7 +102,7 @@ class TurtleBall(Projectile, Turtle):
 		# Having y offset as zero pushes the start & end of a trajectory off the bottom of the screen,
 		# so elevate it slightly (10 pixels seems to work)
 		y_offset = 10
-		self.setposition(-window_width / 2, -window_height / 2 + y_offset)
+		self.setposition(-window_width // 2, -window_height // 2 + y_offset)
 		# All points will be plotted relative to this position
 		self.starting_position = self.position()
 		# Now make the cannonball visible
@@ -120,9 +120,9 @@ class TurtlePlotter(AbstractPlotter):
 		# Initialise the Turtle system
 		turtle = Turtle()
 		turtle.reset()
-		self.screen = turtle.getscreen()
 		# Get rid of the ugly arrow at the centre of the screen
 		turtle.hideturtle()
+		self.screen = turtle.getscreen()
 		# Maximise the screen, with a bit of space around so you move or resize it
 		self.screen.setup(width = 0.9, height = 0.9, startx = 10, starty = 10)
 		# Get the current graphics window width & height
@@ -244,7 +244,7 @@ for angle in [0.0, 15.0, 30.0, 45.0, 60.0, 75.0]:
 	time = trajectoryPlotter.calculateTrajectory(planet, gun, height, angle)
 	# Just out of interest: the time take to reach sea level -
 	# This was returned by the calculateTrajectory() method
-	print ('v = %im/s, h = %im, θ = %i°, t = %fs' % (gun.muzzleVelocity(), height, angle, time))
+	print ('v = %im/s, h = %im, angle = %i°, t = %fs' % (gun.muzzleVelocity(), height, angle, time))
 
 # Do any tidying up needed by the plotter
 plotter.finalise()
