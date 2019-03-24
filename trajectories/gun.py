@@ -114,9 +114,6 @@ class TurtleBall(Projectile, Turtle):
 		# Use the Turtle Vector addition functionality to move the cannonball
 		self.setposition(self.starting_position + Vec2D(x // self.scalefactor, y // self.scalefactor))
 
-	def finish_plotting(self):
-		self.penup()
-
 class TurtlePlotter(AbstractPlotter):
 	# Will display graphs as a collection of coordinates output on the python console
 	def __init__(self, projectile_class):
@@ -247,7 +244,7 @@ for angle in [0.0, 15.0, 30.0, 45.0, 60.0, 75.0]:
 	time = trajectoryPlotter.calculateTrajectory(planet, gun, height, angle)
 	# Just out of interest: the time take to reach sea level -
 	# This was returned by the calculateTrajectory() method
-	print ('v = %im/s, h = %im, theta = %i°, t = %fs' % (gun.muzzleVelocity(), height, angle, time))
+	print ('v = %im/s, h = %im, θ = %i°, t = %fs' % (gun.muzzleVelocity(), height, angle, time))
 
 # Do any tidying up needed by the plotter
 plotter.finalise()
