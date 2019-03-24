@@ -1,14 +1,19 @@
-# Calculate the trajectory of a projectile fired horizontally from a gun
+# Calculate the trajectory of a projectile fired from a gun
+#
 # Source of mathematics and inspiration taken from Example 1: Predicting the range of a cannonball,
 # Unit 10 Quadratics, Book C, MU123 Discovering Mathematics, The Open University
+#
 # Inspiration for the addition of angle θ to formulae for x and x-coordinates from
 # https://www.101computing.net/projectile-motion-formula/
-# Ballistic properties of .303 round from https://en.wikipedia.org/wiki/.303_British
+#
+# Ballistic properties of .303 round from
+# https://en.wikipedia.org/wiki/.303_British
+#
 # Author of python code: Steve Dwyer
 
 import abc
 from math import cos, sin, radians
-import matplotlib.pyplot as pyplot
+from matplotlib import pyplot
 from turtle import Turtle, Vec2D
 
 # Define a class of planets with their respective values of the constant g,
@@ -77,14 +82,16 @@ class Projectile(metaclass=abc.ABCMeta):
 
 # The only projectile we have for Turtle is a black cannonball for now
 class TurtleBall(Projectile, Turtle):
-	def __init__(self, screen):
-		# Initialise the Turtle system
+	def __init__(self, window_width, window_height):
+		# Set scale factor accordingly to display all the trajectories on the screen
+		# (Using a planet with a low G and a gun with a high muzzle velocity will require the
+		# scale factor to be increased significantly)
 		self.scalefactor = 10
-		y_offset = 10
+
+		# Initialise the Turtle object
 		Turtle.__init__(self, shape="circle")
+		# Hide the turtle as soon as possible, otherwise you get ugly flashes at the centre of the screen
 		self.hideturtle()
-		self.window_width = screen.window_width()
-		self.window_height = screen.window_height()
 
 		# Give the cannonball its form
 		self.penup()
@@ -92,43 +99,57 @@ class TurtleBall(Projectile, Turtle):
 		self.pencolor("red")
 		self.resizemode("user")
 		self.shapesize(8 / self.scalefactor)
-		self.setposition(-self.window_width / 2, -self.window_height / 2 + y_offset)
+		# Having y offset as zero pushes the start & end of a trajectory off the bottom of the screen,
+		# so elevate it slightly (10 pixels seems to work)
+		y_offset = 10
+		self.setposition(-window_width / 2, -window_height / 2 + y_offset)
+		# All points will be plotted relative to this position
 		self.starting_position = self.position()
+		# Now make the cannonball visible
 		self.showturtle()
 		self.pendown()
 
 	# Move to the next coordinate
 	def step(self, x, y):
+		# Use the Turtle Vector addition functionality to move the cannonball
 		self.setposition(self.starting_position + Vec2D(x // self.scalefactor, y // self.scalefactor))
 
 	def finish_plotting(self):
 		self.penup()
-		self.is_first_point = True
 
 class TurtlePlotter(AbstractPlotter):
 	# Will display graphs as a collection of coordinates output on the python console
-	def __init__(self, projectile):
+	def __init__(self, projectile_class):
+		# Initialise the Turtle system
 		turtle = Turtle()
 		turtle.reset()
 		self.screen = turtle.getscreen()
+		# Get rid of the ugly arrow at the centre of the screen
 		turtle.hideturtle()
+		# Maximise the screen, with a bit of space arouond so you move or resize it
 		self.screen.setup(width = 0.9, height = 0.9, startx = 10, starty = 10)
-		# Display the projectile's trajectory in (approximated) real time
+		# Get the current graphics window width & height
+		self.window_width = self.screen.window_width()
+		self.window_height = self.screen.window_height()
+		# Display the projectile's trajectory in (virtual) real time
 		self.screen.tracer(1000, 1)
 		# The class and an instance variable for the projectile
-		self.projectile_class = projectile
+		self.projectile_class = projectile_class
 		self.projectile = None
 
 	def init(self):
-		self.projectile = self.projectile_class(self.screen)
+		# Instantiate a new projectile object from the class passed into the Constructor
+		self.projectile = self.projectile_class(self.window_width, self.window_height)
 
 	def plot(self, x, y):
-		# Plot the point (x, y) on the graph
+		# Tell the projectile to move to point (x, y) on the graph.
+		# Use integer division to always pass in whole numbers
 		self.projectile.step(x // 1, y // 1)
 
 	def finalise(self):
-		# Call Tkinter's mainloop function
+		# Make sure the last point is plotted by updating the screen
 		self.screen.update()
+		# Call Tkinter's mainloop function
 		self.screen.mainloop()
 
 class PyplotPlotter(AbstractPlotter):
@@ -138,17 +159,15 @@ class PyplotPlotter(AbstractPlotter):
 		self.x_values = []
 		self.y_values = []
 
+	def init(self):
+		pass
+
 	def plot(self, x, y):
 		# Add the passed x and y values to the internal list variables to use later
 		self.x_values.append(x)
 		self.y_values.append(y)
 
-	def finish_plotting(self):
-		pass
-
 	def finalise(self):
-		# The passed y value is less than or equal to zero,
-		# indicating that the cannonball has reached sea level and therefore
 		# the algorithm is complete: so plot the graph
 		pyplot.plot(self.x_values, self.y_values)
 		pyplot.show
@@ -174,13 +193,16 @@ class TrajectoryPlotter():
 		g = planet.g()
 		v = gun.muzzleVelocity()
 		y = h # Initialise point on y-axis to be identical to our initial height above sea level
-		θ = radians(degrees)
-		cos_θ = cos(θ)
-		sin_θ = sin(θ)
 		t = 0.0 # Time travelled by the projectile so far (in seconds)
 
+		# cos() and sin() expect their argument to be passed in radians, not degrees
+		θ = radians(degrees)
+		# Perform the cos() and sin() operations outside the loop, as these are relatively expensive
+		# operations and the values won't change throughout the trajectory anyway
+		cos_θ = cos(θ)
+		sin_θ = sin(θ)
+
 		# No account is taken of drag (air resistance) in this model
-		# The projectile is fired horizontally
 		self.plotter.init()
 
 		while y > 0.0: # Loop as long as projectile is above sea level
